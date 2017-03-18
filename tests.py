@@ -3,11 +3,13 @@ from pymongo import MongoClient as MC
 import json
 import requests
 from app import DEFAULT_PAGE_LENGTH
-import logging_library
+from logging_interface import Logger
 
 mongo_connection = MC('localhost', 27017)
 db = mongo_connection.logs
 mongo_logs = db.logs
+
+logger = Logger('unittests', ssl=False, apikey='chunkybacon')
 
 sample_log = {"origin": "postman",
               "timestamp": "now!",
@@ -25,9 +27,6 @@ def populate_logs(n):
 
 
 class LoggingServerTest(TestCase):
-
-    def setUp(self):
-        pass
 
     def test_posting_log(self):
         response = requests.post('http://localhost:5000/?key=chunkybacon',
@@ -64,4 +63,6 @@ class LoggingServerTest(TestCase):
 
 class LoggingCLientLibraryTest(TestCase):
 
-
+    def test_posting_log(self):
+        response = logger.log('this is a test')
+        assert response.success

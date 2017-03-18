@@ -54,6 +54,8 @@ class Logger:
                  apikey: str = None,
                  ssl:    bool = True):
         self.origin = origin
+        self.server = server
+        self.port = port
         self.apikey = apikey
         self.protocol = 'http'
         if ssl:
@@ -71,7 +73,7 @@ class Logger:
         # Construct the base url in the log method, not the init method, so that
         # if the api key/server/etc is changed due to a previous error, updated
         # connection details are acknowledged.
-        base_url = self.protocol + '://' + self.server + ':' + self.port + '/'
+        base_url = self.protocol + '://' + self.server + ':' + str(self.port) + '/'
 
         if self.apikey is not None:
             base_url += '?key='+self.apikey
@@ -83,12 +85,12 @@ class Logger:
                'origin': self.origin}
 
         # Don't let supplementary details override the log details
-        [kwargs.pop(key) for key in log.keys()]
+        [kwargs.pop(key, None) for key in log.keys()]
 
         # Extend the log with the supplementary details
         for key, value in kwargs.items():
             log[key] = value
 
-        response = requests.post(self.baseurl, data=json.dumps(log))
+        response = requests.post(base_url, data=json.dumps(log))
 
         return LoggingResult(response.status_code == 200, response)
