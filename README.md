@@ -49,3 +49,11 @@ What I'd like to do in future would be to implement something similar, with Pyth
 ### Log behaviours
 
 Similarly, logging behaviour could be configured via Mongo, for the depreciation notes etc in the Gist spec. However, that's quite beyond me for a 10 hour task! A lot of the default Python logging behaviour sounds useful for the original gist, but just handing over to Python's native logger isn't very interesting as a solultion to this challenge, so while I've been told to keep it simple, I've avoided Python's internal logging mechanisms intentionally.
+
+## Avoiding injection attacks
+I don't believe injection attacks are an issue when taking filter data from supplied parameters and feeding that directly into Mongo, because:
+
+1. All requests for filtering are authenticated, and we should be able to trust requests which have an API key
+2. Sometimes these things *do* get compromised, but even if it did, one can't insert or delete anything from Mongo via filtering
+
+However, it should be noted that if you're taking parameters arbitrarily and filtering based on them, and there's *lots* of log data, then you might end up returning lots and lots of data! I worry that there's some sort of DDOS issue there. However, an actual real-world implementation would sanatise if this was an issue, and hopefully I'll get chance to implement better authentication anyway.

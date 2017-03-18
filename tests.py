@@ -2,7 +2,8 @@ from unittest import TestCase
 from pymongo import MongoClient as MC
 import json
 import requests
-from app import app
+from app import DEFAULT_PAGE_LENGTH
+import logging_library
 
 mongo_connection = MC('localhost', 27017)
 db = mongo_connection.logs
@@ -23,8 +24,7 @@ def populate_logs(n):
                       data=json.dumps(log))
 
 
-
-class LoggingTest(TestCase):
+class LoggingServerTest(TestCase):
 
     def setUp(self):
         pass
@@ -33,15 +33,13 @@ class LoggingTest(TestCase):
         response = requests.post('http://localhost:5000/?key=chunkybacon',
                                  data=json.dumps(sample_log))
         assert response.status_code is not 422
-        print(response.content)
-        print(type(response.content))
         assert response.content == b'Posted successfully.'
 
     def test_authentication(self):
         response_auth = requests.post('http://localhost:5000/?key=chunkybacon',
-                                 data=json.dumps(sample_log))
+                                      data=json.dumps(sample_log))
         response_no_auth = requests.post('http://localhost:5000/',
-                                 data=json.dumps(sample_log))
+                                         data=json.dumps(sample_log))
         assert response_no_auth.status_code == 401
         assert response_auth.status_code is not 422
         assert response_auth.content == b'Posted successfully.'
@@ -52,11 +50,18 @@ class LoggingTest(TestCase):
         assert response.content.decode() != b'[]'
 
     def test_pagination_limit_length(self):
-        populate_logs(100)
-        response_length_3 = requests.get('http://localhost:5000/?key=chunkybacon&page=3&page_length=3')
-        response_length_4 = requests.get('http://localhost:5000/?key=chunkybacon&page=3&page_length=4')
+        populate_logs(200)
+        response_no_limit = requests.get('http://localhost:5000/?key=chunkybacon&page=1')
+        response_length_3 = requests.get('http://localhost:5000/?key=chunkybacon&page=1&page_length=3')
+        response_length_4 = requests.get('http://localhost:5000/?key=chunkybacon&page=1&page_length=4')
         assert len(response_length_3.content) < len(response_length_4.content)
+        assert len(json.loads(response_no_limit.content.decode())) == DEFAULT_PAGE_LENGTH
 
     def tearDown(self):
-        # Remove all logs
+        # Remove all logs from the tests after they run
         mongo_logs.remove()
+
+
+class LoggingCLientLibraryTest(TestCase):
+
+
