@@ -55,13 +55,9 @@ class Logger:
                  ssl:    bool = True):
         self.origin = origin
         self.apikey = apikey
-        protocol = 'http'
+        self.protocol = 'http'
         if ssl:
-            protocol += 's'
-        self.base_url = protocol + '://' + server + ':' + port + '/'
-
-        if self.apikey is not None:
-            self.base_url += '?key='+self.apikey
+            self.protocol += 's'
 
     def log(self,
             message: str,
@@ -71,6 +67,15 @@ class Logger:
         Submit a log message.
         Log levels are optional, and default to `debug`.
         '''
+
+        # Construct the base url in the log method, not the init method, so that
+        # if the api key/server/etc is changed due to a previous error, updated
+        # connection details are acknowledged.
+        base_url = self.protocol + '://' + self.server + ':' + self.port + '/'
+
+        if self.apikey is not None:
+            base_url += '?key='+self.apikey
+
         timestamp = datetime.now().isoformat()
         log = {'message': message,
                'timestamp': timestamp,
