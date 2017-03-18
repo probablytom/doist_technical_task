@@ -26,6 +26,10 @@ A valid log has *at least* the keys:
 
 Post json to filter using in Mongo. If no json provided, returns everything. If any json provided, filters using that json in pymongo and returns the result. Dates will be converted to Mongo's required format, so they should be provided in TODO format in the request's json...
 
+Retrieving logs supports pagination. To enable, add the page number as a URL parameter with the key `page`. Page length can also be parameterised; it defaults at 100, and can be changed by passing a URL parameter with the key `lage_length`.
+
+Examples of these can be found in the supplied unit tests.
+
 ---
 
 # Futher implementation ideas
