@@ -26,6 +26,40 @@ def requires_valid_key(func):
     return auth_check
 
 
+@app.route('/', methods=['GET'])
+@requires_valid_key
+def log_manager():
+
+    # Default to finding all logs
+    filter_keys = {}
+
+    request_data = request.data.decode()
+    if request_data != '':
+        filter_keys = json.loads(request_data)
+
+    matches = mongo_logs.find(filter_keys, {'_id': 0})
+
+    # Pagination, if it's required
+    # TODO: THIS IS SLOW. Replace with
+    # https://scalegrid.io/blog/fast-paging-with-mongodb/ if there's time...
+    page = request.args.get('page')
+    if page is not None:
+        page = int(page)
+
+        # Get the required page length
+        page_length = request.args.get('page_length')
+        if page_length is None:
+            page_length = DEFAULT_PAGE_LENGTH
+        else:
+            page_length = int(page_length)
+
+        # Move the Mongo cursor and limit the number of results
+        matches.skip((page-1)*page_length).limit(page_length)
+
+    # Convert to a json list and return
+    return json.dumps(list(matches))
+
+
 @app.route('/', methods=['POST'])
 @requires_valid_key
 def log_accepter():
@@ -45,34 +79,3 @@ def log_accepter():
 
     mongo_logs.insert_one(content)
     return "Posted successfully."
-
-
-@app.route('/', methods=['GET'])
-@requires_valid_key
-def log_manager():
-
-    # Default to finding all logs
-    filter_keys = {}
-
-    request_data = request.data.decode()
-    if request_data != '':
-        filter_keys = json.loads(request_data)
-
-    matches = mongo_logs.find(filter_keys, {'_id': 0})
-
-    # Pagination, if it's required
-    # TODO: THIS IS SLOW. Replace with
-    # https://scalegrid.io/blog/fast-paging-with-mongodb/ if there's time...
-    page = int(request.args.get('page'))
-    if page is not None:
-
-        # Get the required page length
-        page_length = int(request.args.get('page_length'))
-        if page_length is None:
-            page_length = DEFAULT_PAGE_LENGTH
-
-        # Move the Mongo cursor and limit the number of results
-        matches.skip((page-1)*page_length).limit(page_length)
-
-    # Convert to a json list and return
-    return json.dumps(list(matches))
