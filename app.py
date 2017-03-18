@@ -1,9 +1,12 @@
 from flask import Flask, request, abort
 from pymongo import MongoClient as MC
 from functools import wraps
+import json
 app = Flask(__name__)
 mongo_connection = MC('localhost', 27017)
-mongo_logs = mongo_connection.logs
+db = mongo_connection.logs
+mongo_logs = db.logs
+
 
 API_KEYS = ['chunkybacon']
 
@@ -25,10 +28,27 @@ def requires_valid_key(func):
 @app.route('/', methods=['POST'])
 @requires_valid_key
 def log_accepter():
-    raise NotImplemented('Yet to write this!')
+    content = json.loads(request.data.decode())
+    required_keys = ['log_level',
+                     'timestamp',
+                     'message',
+                     'origin']
+
+    # Check that the correct keys are supplied
+    if False in [required_key in content.keys()
+                 for required_key in required_keys]:
+        abort(422)  # Unprocessable entity, see http://bit.ly/2nPQPCE
+
+    # Make sure that the log level is case insensitive
+    content['log_level'] = content['log_level'].upper()
+
+    mongo_logs.insert_one(content)
+
+    return "Posted successfully."
 
 
 @app.route('/', methods=['GET'])
 @requires_valid_key
 def log_manager():
-    raise NotImplemented('Yet to write this!')
+    print(request.args)
+    return 'cheers'
