@@ -57,3 +57,13 @@ I don't believe injection attacks are an issue when taking filter data from supp
 2. Sometimes these things *do* get compromised, but even if it did, one can't insert or delete anything from Mongo via filtering
 
 However, it should be noted that if you're taking parameters arbitrarily and filtering based on them, and there's *lots* of log data, then you might end up returning lots and lots of data! I worry that there's some sort of DDOS issue there. However, an actual real-world implementation would sanatise if this was an issue, and hopefully I'll get chance to implement better authentication anyway.
+
+---
+
+# TODO
+
+Things I'm still getting around to. 
+
+* Testing the filtering mechanism (though I think this works, albeit inelegantly, for everything that isn't filtering by time or sorting)
+* Implement a better response from the logging module than the LoggingResult class
+* Conversion of timestamps

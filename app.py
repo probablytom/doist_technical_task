@@ -1,6 +1,7 @@
 from flask import Flask, request, abort
 from pymongo import MongoClient as MC
 from functools import wraps
+import arrow
 import json
 app = Flask(__name__)
 mongo_connection = MC('localhost', 27017)
@@ -56,8 +57,19 @@ def log_manager():
         # Move the Mongo cursor and limit the number of results
         matches.skip((page-1)*page_length).limit(page_length)
 
-    # Convert to a json list and return
-    return json.dumps(list(matches))
+    # Prepare for returning
+    matches = list(matches)
+
+    # pymongo keeps times as datetime.datetime objects. We change this to
+    # iso8601 format for compatability with things that aren't Python!
+    # Here, we change all of the timestamps to ISO8601 timestamps.
+    def corrected(match):
+        match['timestamp'] = match['timestamp'].isoformat()
+        return match
+    matches = [corrected(match)
+               for match in matches]
+
+    return json.dumps(matches)
 
 
 @app.route('/', methods=['POST'])
@@ -76,6 +88,9 @@ def log_accepter():
 
     # Make sure that the log level is case insensitive
     content['log_level'] = content['log_level'].upper()
+
+    # Convert ISO8601 datetime to Python datetime.datetime for adding to mongo
+    content['timestamp'] = arrow.get(content['timestamp']).datetime
 
     mongo_logs.insert_one(content)
     return "Posted successfully."
