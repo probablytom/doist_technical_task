@@ -34,6 +34,56 @@ Retrieving logs supports pagination. To enable, add the page number as a URL par
 
 Examples of these can be found in the supplied unit tests.
 
+## Starting the server
+
+The server's started as a simple Flask server; an easy way to run it is to execute with `python3 -m flask run`. Note that dependancies from `requirements.txt` should be installed. 
+
+---
+
+# Logging Interface Documentation
+
+A library is provided for logging: `logging_interface.py`. This simplifies the interaction with the server, so you don't have to clutter code with HTTP requests. 
+
+Logging is done through the Logger class, which contains a simple log method. Typical usage might be:
+
+```python
+from logging_interface import Logger
+
+logger = Logger(__name__, apikey=APIKEY_HERE)
+logger.log("I'm a log message!")
+```
+
+Note that this will default to try to connect to a logging server on localhost at the standard Flask port (5000), with SSL enabled and no authentication to the logging server.
+
+More detailled usage might be:
+
+```python
+from logging_interface import Logger
+
+logger = Logger(__name__,
+                apikey=APIKEY_HERE,
+                server=192.168.0.123,
+                port=443,
+                ssl=True)  # Or False if you swing that way
+
+logger.log('I am a leaf on the wind',
+           log_level='critical',
+           extra_detail='You can add additional log details as keyword arguments here. Logs are stored on the server as Mongo documents, which are akin to a dictionary or map.',
+           another_detail=12345)
+```
+
+The logger returns a LoggingResult object informing you of the log outcome:
+
+```python
+from logging_interface import Logger
+
+logger = Logger(__name__, apikey=APIKEY_HERE)
+result = logger.log("I'm a log message!")
+
+result.success   # A boolean indicating whether the log was sent successfully to the logging server
+result.response  # A python requests library response object, to inspect if logging fails
+```
+
 ---
 
 # Futher implementation ideas
