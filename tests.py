@@ -2,7 +2,7 @@ from unittest import TestCase
 from pymongo import MongoClient as MC
 import json
 import requests
-from app import DEFAULT_PAGE_LENGTH
+from logging_server import DEFAULT_PAGE_LENGTH
 from logging_interface import Logger
 from copy import copy
 from datetime import datetime
@@ -75,3 +75,38 @@ class LoggingCLientLibraryTest(TestCase):
     def test_posting_log(self):
         response = logger.log('this is a test')
         assert response.success
+
+    def test_additional_log_details(self):
+        response = logger.log('chunkiest',
+                              additional_detail='bacon')
+        assert response.success
+
+    def test_no_authentication(self):
+        logger_no_auth = copy(logger)
+        logger_no_auth.apikey = None
+        response = logger_no_auth.log('This should not work.')
+        assert not response.success
+        assert response.response.status_code == 401
+
+    def test_bad_authentication(self):
+        logger_no_auth = copy(logger)
+        logger_no_auth.apikey = 'letmein'
+        response = logger_no_auth.log('This should not work.')
+        assert not response.success
+        assert response.response.status_code == 401
+
+    def test_wrong_server(self):
+        logger_bad_server = copy(logger)
+        logger_bad_server.server = '168.192.0.0'
+        try:
+            response = logger_bad_server.log('This should not get through!')
+
+        # Success of the test is determined by the right error being thrown.
+        except requests.ConnectTimeout:
+            assert True
+        except:
+            assert False
+
+    def tearDown(self):
+        # Remove all logs from the tests after they run
+        mongo_logs.remove()

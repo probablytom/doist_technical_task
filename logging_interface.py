@@ -91,6 +91,8 @@ class Logger:
         for key, value in kwargs.items():
             log[key] = value
 
-        response = requests.post(base_url, data=json.dumps(log))
+        response = requests.post(base_url,
+                                data=json.dumps(log),
+                                timeout=10)
 
         return LoggingResult(response.status_code == 200, response)

@@ -36,7 +36,14 @@ Examples of these can be found in the supplied unit tests.
 
 ## Starting the server
 
-The server's started as a simple Flask server; an easy way to run it is to execute with `python3 -m flask run`. Note that dependancies from `requirements.txt` should be installed. 
+The server's started as a simple Flask server; an easy way to run it is to execute with:
+
+```bash
+export FLASK_APP=logging_server.py
+python3 -m flask run
+```
+
+Note that dependancies from `requirements.txt` should be installed. 
 
 ---
 
@@ -83,6 +90,10 @@ result = logger.log("I'm a log message!")
 result.success   # A boolean indicating whether the log was sent successfully to the logging server
 result.response  # A python requests library response object, to inspect if logging fails
 ```
+
+## Timeouts
+
+Note that, if the server can't be connected to at all after a timeout of 10 seconds, a ``requests.ConnectTimeout` exception will be raised.
 
 ---
 
