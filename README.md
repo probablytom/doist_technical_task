@@ -1,32 +1,36 @@
-# API Documentation
+# Logging Server API Documentation
 
 ## Authentication
 
-Authentication is done via an API key check. In the JSON provided in the request contains a `'key':apikey` pair, authentication is passed. The valid key is 'chunkybacon'.
+Authentication is done via an API key check. The key is supplied via a URL parameter; over SSL I don't think this would be insecure.
 
-I know there are better ways to do this -- if I have time before needing to get this back to Amir, I'll implement something else. I'm not overly familiar with this sort of tech, though, and this was the best thing I could come up with myself that seemed reasonably easy to implement off my own back. Given time, I'll implement this using Flask's built-in authentication system. 
+I know there are better ways to do this -- if I have time before needing to get this back to Amir, I'll implement something else. I haven't implemented something like that before, so I googled around and whipped up a little decorator that works, but any system where the authentication doesn't have to be done on every request would be better! Also, moving the API key from the URL parameters would really be ideal.
 
 ## Root `/`
 
 Submitting and retrieving logs happens here! All requests to this endpoint need to be authenticated via the api key.
 
+Examples of these can be found in the supplied unit tests.
+
 ### Submitting logs with `POST` requests
-Provided the authentication system is passed, the remaining json submitted will be stored in the Mongo logging database.
+Provided the authentication system is passed, json found in the request body will be stored in the Mongo logging database.
 
 A valid log has *at least* the keys:
 
-* `log_level` -- the level of the log. For example, debug, error, or critical.
-  * Case insensitive.
+* `log_level` -- the level of the log. For example, debug, error, or critical
+  * Case insensitive
 * `timestamp` -- the log's associated timestamp
-  * This should be in TODOTODOTODO format
+  * This should be in ISO-8601 format
 * `message` -- the actual plaintext log content
 * `origin` -- the logging module, or whatever the log relates to
 
+It can also have any other keys, however, supplied in the json in the body of the request.
+
 ### Retrieving logs with a `GET` request
 
-Post json to filter using in Mongo. If no json provided, returns everything. If any json provided, filters using that json in pymongo and returns the result. Dates will be converted to Mongo's required format, so they should be provided in TODO format in the request's json...
+Post json in the request body to filter with, suitable for filtering in PyMongo (standard mongo filtering works). If no json provided, returns everything. If any json provided, filters using that json in pymongo and returns the result. Dates will be converted to Mongo's required format, so they should be provided in ISO-8601 format in the request's json.
 
-Retrieving logs supports pagination. To enable, add the page number as a URL parameter with the key `page`. Page length can also be parameterised; it defaults at 100, and can be changed by passing a URL parameter with the key `lage_length`.
+Retrieving logs supports pagination. To enable, add the page number as a URL parameter with the key `page`. Page length can also be parameterised; it defaults at 100, and can be changed by passing a URL parameter with the key `page_length`.
 
 Examples of these can be found in the supplied unit tests.
 
@@ -38,17 +42,15 @@ Examples of these can be found in the supplied unit tests.
 
 Given more time, a better authentication system would have been good to implement. Flask has a built in system that would probably work well...
 
-## Log level hierarchy
+## Log level hierarchy and log behaviours
 
-It would be good to introduce some hierarchy of log levels...Python's model, with five distinct levels, would work nicely.
+It would be good to introduce some hierarchy of log levels. Python's model, with five distinct levels, would work nicely as a starting point.
 
-Here's the thing. Python's model is particularly nice because of its *extensibility*. Each log level has an associated number (10, 20, 30...), and additional levels can be supplied to the logging module with their respective numbers.
+Here's the thing. Python's model is particularly nice because of its *extensibility*. Each log level has an associated number (10, 20, 30...), and additional levels can be supplied to the logging module with their respective numbers, so your logs can have whatever granularity of detail.
 
-What I'd like to do in future would be to implement something similar, with Python-like behaviour configured via a logging_levels table in Mongo.
+You can also specify different behaviours of different loggers. This would take care of things like log depreciation -- easy to do with a Mongo query in another server (or building it into this logging server), but also easy if Python can take care of it for you. Log backups, redundancy, etc. can be supported with this system too -- it's really quite good.
 
-### Log behaviours
-
-Similarly, logging behaviour could be configured via Mongo, for the depreciation notes etc in the Gist spec. However, that's quite beyond me for a 10 hour task! A lot of the default Python logging behaviour sounds useful for the original gist, but just handing over to Python's native logger isn't very interesting as a solultion to this challenge, so while I've been told to keep it simple, I've avoided Python's internal logging mechanisms intentionally.
+What I'd like to do in future would be to implement something similar, with Python-like behaviour configured via a logging_levels table in Mongo, replicating the parts of the Python model we need. I'm sure other languages I'm less familiar with have similarly good examples.
 
 ## Avoiding injection attacks
 I don't believe injection attacks are an issue when taking filter data from supplied parameters and feeding that directly into Mongo, because:
@@ -56,7 +58,7 @@ I don't believe injection attacks are an issue when taking filter data from supp
 1. All requests for filtering are authenticated, and we should be able to trust requests which have an API key
 2. Sometimes these things *do* get compromised, but even if it did, one can't insert or delete anything from Mongo via filtering
 
-However, it should be noted that if you're taking parameters arbitrarily and filtering based on them, and there's *lots* of log data, then you might end up returning lots and lots of data! I worry that there's some sort of DDOS issue there. However, an actual real-world implementation would sanatise if this was an issue, and hopefully I'll get chance to implement better authentication anyway.
+However, it should be noted that if you're taking parameters arbitrarily and filtering based on them, and there's *lots* of log data, then you might end up returning lots and lots of data! I worry that there's some sort of DDOS issue there. However, an actual real-world implementation would sanatise if this was an issue, and hopefully I'll get chance to implement better authentication anyway, which does away with some of the concerns of exporting unusually huge amounts of data via bad filtering.
 
 ---
 
@@ -66,4 +68,3 @@ Things I'm still getting around to.
 
 * Testing the filtering mechanism (though I think this works, albeit inelegantly, for everything that isn't filtering by time or sorting)
 * Implement a better response from the logging module than the LoggingResult class
-* Conversion of timestamps
