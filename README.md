@@ -1,5 +1,18 @@
 # Logging Server API Documentation
 
+## Starting the server
+
+The server's started as a simple Flask server; an easy way to run it is to execute with:
+
+```bash
+export FLASK_APP=logging_server.py
+python3 -m flask run
+```
+
+Note that dependancies from `requirements.txt` should be installed. 
+
+It will expect a Mongo database running locally. You can launch this on a machine with Mongo installed using the bash command `mongod`.
+
 ## Authentication
 
 Authentication is done via an API key check. The key is supplied via a URL parameter; over SSL I don't think this would be insecure.
@@ -33,17 +46,6 @@ Post json in the request body to filter with, suitable for filtering in PyMongo 
 Retrieving logs supports pagination. To enable, add the page number as a URL parameter with the key `page`. Page length can also be parameterised; it defaults at 100, and can be changed by passing a URL parameter with the key `page_length`.
 
 Examples of these can be found in the supplied unit tests.
-
-## Starting the server
-
-The server's started as a simple Flask server; an easy way to run it is to execute with:
-
-```bash
-export FLASK_APP=logging_server.py
-python3 -m flask run
-```
-
-Note that dependancies from `requirements.txt` should be installed. 
 
 ---
 
