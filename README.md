@@ -61,15 +61,15 @@ More detailled usage might be:
 from logging_interface import Logger
 
 logger = Logger(__name__,
-                apikey=APIKEY_HERE,
-                server=192.168.0.123,
-                port=443,
+                apikey=APIKEY_HERE,      # A string
+                server='192.168.0.123',  # A string
+                port=443,                # An integer
                 ssl=True)  # Or False if you swing that way
 
-logger.log('I am a leaf on the wind',
-           log_level='critical',
+logger.log('I am a leaf on the wind',    # A string
+           log_level='critical',         # A string
            extra_detail='You can add additional log details as keyword arguments here. Logs are stored on the server as Mongo documents, which are akin to a dictionary or map.',
-           another_detail=12345)
+           another_detail=12345)         # Additional log parameters can be whatever you want, so long as they're json-serialisable.
 ```
 
 The logger returns a LoggingResult object informing you of the log outcome:
